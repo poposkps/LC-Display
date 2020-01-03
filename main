@@ -1,0 +1,260 @@
+#include <iostream>
+#include <array>
+#include <assert.h>
+#include <memory>
+#include <vector>
+#include <fstream>
+#ifndef ONLINE_JUDGE
+#include <boost/algorithm/string/trim.hpp>
+#include <sstream>
+#endif
+
+typedef std::array<bool, 7> digital_pattern_t;
+
+const digital_pattern_t ZERO_MATRIC = {
+                                1,
+                             1,    1,
+                                0,
+                             1,    1,
+                                1 };
+
+const digital_pattern_t ONE_MATRIC = {
+                                0,
+                             0,    1,
+                                0,
+                             0,    1,
+                                0 };
+
+const digital_pattern_t TWO_MATRIC = {
+                                1,
+                             0,    1,
+                                1,
+                             1,    0,
+                                1 };
+
+const digital_pattern_t THREE_MATRIC = {
+                                1,
+                             0,    1,
+                                1,
+                             0,    1,
+                                1 };
+
+const digital_pattern_t FOUR_MATRIC = {
+                                0,
+                             1,    1,
+                                1,
+                             0,    1,
+                                0 };
+
+const digital_pattern_t FIVE_MATRIC = {
+                                1,
+                             1,    0,
+                                1,
+                             0,    1,
+                                1 };
+
+const digital_pattern_t SIX_MATRIC = {
+                                1,
+                             1,    0,
+                                1,
+                             1,    1,
+                                1 };
+
+const digital_pattern_t SEVEN_MATRIC = {
+                                1,
+                             0,    1,
+                                0,
+                             0,    1,
+                                0 };
+
+const digital_pattern_t EIGHT_MATRIC = {
+                                1,
+                             1,    1,
+                                1,
+                             1,    1,
+                                1 };
+
+const digital_pattern_t  NINE_MATRIC = {
+                                1,
+                             1,    1,
+                                1,
+                             0,    1,
+                                1 };
+
+class Printer
+{
+public:
+    virtual ~Printer(){}
+
+public:
+    virtual void print_line(std::ostream & out, int size, size_t nth) = 0;
+};
+
+class SeparaterPrinter : public Printer
+{
+public:
+    SeparaterPrinter()
+    {
+
+    }
+
+public:
+    virtual void print_line(std::ostream & out,int size, size_t nth) override
+    {
+        out << " ";
+    }
+};
+
+class DigitalPrinter : public Printer
+{
+public:
+    DigitalPrinter(const digital_pattern_t & pattern)
+        : pattern_(pattern)
+    {
+
+    }
+
+public:
+    virtual void print_line(std::ostream & out, int size, size_t nth) override
+    {
+        // ---  0
+        // | |  
+        // ---  width + 1
+        // | |  
+        // ---  width*2 + 2
+        if (nth == 0)
+            print_top_line(out, size);
+        else if (nth < size + 1)
+            print_upper_middle_line(out, size);
+        else if (nth == size + 1)
+            print_middle_line(out, size);
+        else if (nth < size * 2 + 2)
+            print_downer_middle_line(out, size);
+        else
+        {
+            print_button_line(out, size);
+        }
+    }
+
+private:
+    void print_top_line(std::ostream & out, int size)
+    {
+        out << " ";
+        for (size_t i = 0; i < size ; ++i)
+            out << (pattern_[0] ? "-" : " "); 
+        out << " ";
+    }
+    void print_upper_middle_line(std::ostream & out, int size)
+    {
+        out << (pattern_[1] ? "|" : " ");
+        for (size_t i = 0; i < size; ++i)
+            out << " ";
+        out << (pattern_[2] ? "|" : " ");
+    }
+    void print_middle_line(std::ostream & out, int size)
+    {
+        out << " ";
+        for (size_t i = 0; i < size; ++i)
+            out << (pattern_[3] ? "-" : " ");
+        out << " ";
+    }
+    void print_downer_middle_line(std::ostream & out, int size)
+    {
+        out << (pattern_[4] ? "|" : " ");
+        for (size_t i = 0; i < size; ++i)
+            out << " ";
+        out << (pattern_[5] ? "|" : " ");
+    }
+    void print_button_line(std::ostream & out, int size)
+    {
+        out << " ";
+        for (size_t i = 0; i < size; ++i)
+            out << (pattern_[6] ? "-" : " ");
+        out << " ";
+    }
+private:
+    digital_pattern_t pattern_;
+};
+
+std::shared_ptr<DigitalPrinter> create_digital_printer(char digit)
+{
+    switch (digit)
+    {
+    case '0': return std::make_shared<DigitalPrinter>(ZERO_MATRIC);
+    case '1': return std::make_shared<DigitalPrinter>(ONE_MATRIC);
+    case '2': return std::make_shared<DigitalPrinter>(TWO_MATRIC);
+    case '3': return std::make_shared<DigitalPrinter>(THREE_MATRIC);
+    case '4': return std::make_shared<DigitalPrinter>(FOUR_MATRIC);
+    case '5': return std::make_shared<DigitalPrinter>(FIVE_MATRIC);
+    case '6': return std::make_shared<DigitalPrinter>(SIX_MATRIC);
+    case '7': return std::make_shared<DigitalPrinter>(SEVEN_MATRIC);
+    case '8': return std::make_shared<DigitalPrinter>(EIGHT_MATRIC);
+    case '9': return std::make_shared<DigitalPrinter>(NINE_MATRIC);
+    }
+    return std::shared_ptr<DigitalPrinter>();
+}
+
+std::vector<std::shared_ptr<Printer>> create_printers(const std::string & digits)
+{
+    if (digits.empty())
+        return std::vector<std::shared_ptr<Printer>>();
+
+    std::vector<std::shared_ptr<Printer>> result;
+    result.push_back(create_digital_printer(digits[0]));
+
+    for (size_t i = 1 ; i < digits.size() ; ++i)
+    {
+        result.push_back(std::make_shared<SeparaterPrinter>());
+        result.push_back(create_digital_printer(digits[i]));
+    }
+
+    return result;
+
+}
+
+void run(std::istream & in, std::ostream & out)
+{
+    while (!in.eof())
+    {
+        size_t size = 0;
+        std::string digits;
+        in >> size >> digits;
+        auto printers = create_printers(digits);
+        int height = size * 2 + 3;
+
+        for (size_t line_no = 0; line_no < height; line_no++)
+        {
+            for (auto printer : printers)
+                printer->print_line(out, size, line_no);
+            out << std::endl;
+        }
+
+        out << std::endl;
+    }
+}
+
+#ifdef ONLINE_JUDGE
+
+int main(int argc, char** argv)
+{
+    run(std::cin, std::cout);
+    return 0;
+}
+
+#else
+
+int main(int argc, char** argv)
+{
+    std::ifstream stream_in("input.txt");
+    std::stringstream stream_out;
+    run(stream_in, stream_out);
+
+    std::string my_answer = stream_out.str();
+    std::ifstream t("output.txt");
+    std::string expected_answer((std::istreambuf_iterator<char>(t)),
+        std::istreambuf_iterator<char>());
+
+    BOOST_ASSERT(boost::trim_right_copy(my_answer) == boost::trim_right_copy(expected_answer));
+    return 0;
+}
+#endif
